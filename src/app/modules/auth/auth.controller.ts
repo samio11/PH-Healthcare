@@ -1,6 +1,8 @@
 import { catchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/sendResponse";
+import { setCookie } from "../../utils/setCookie";
 import { authServices } from "./auth.service";
+
 
 const registerPatient = catchAsync(async(req,res)=>{
     const payload = req.body 
@@ -16,6 +18,7 @@ const registerPatient = catchAsync(async(req,res)=>{
 const loginUser = catchAsync(async(req,res)=>{
     const payload = req.body 
     const result = await authServices.loginUser(payload) 
+    setCookie(res,{accessToken:result.accessToken,refreshToken:result.refreshToken})
     sendResponse(res,{
         statusCode: 200,
         success: true,
