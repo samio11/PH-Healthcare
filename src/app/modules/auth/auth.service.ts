@@ -1,6 +1,7 @@
 import { Role, UserStatus } from "../../../generated/prisma/client";
 import { auth } from "../../config/auth";
 import { prisma } from "../../config/prisma";
+import { getAccessToken, getRefreshToken } from "../../utils/token";
 
 type TRegisterPatient = {
     name: string 
@@ -64,8 +65,10 @@ const registerDoctor = async(payload : TRegisterPatient) =>{
 }
 
 const loginUser = async(payload:TLogin) =>{
-    const {email,password} = payload
+    const {email,password} = payload 
+    console.log(email,password)
     const result = await auth.api.signInEmail({body:{email,password}}) 
+    console.log(result)
     if (result.user.isDeleted === true) throw new Error("User is Deleted")
     if (
   result.user.status === UserStatus.BLOCKED ||
@@ -73,7 +76,31 @@ const loginUser = async(payload:TLogin) =>{
 ) {
   throw new Error("User Must be Active");
 }
-    return result
+
+  //AccessToken 
+  const accessToken = getAccessToken({
+    userId: result.user.id,
+    name: result.user.name,
+    email: result.user.email, 
+    role: result.user.role, 
+    status: result.user.status,
+    isDeleted: result.user.isDeleted, 
+    emailVerified: result.user.emailVerified
+  }) 
+
+  //refreshToken 
+   const refreshToken = getRefreshToken({
+    userId: result.user.id,
+    name: result.user.name,
+    email: result.user.email, 
+    role: result.user.role, 
+    status: result.user.status,
+    isDeleted: result.user.isDeleted, 
+    emailVerified: result.user.emailVerified
+  })
+
+
+    return {...result,accessToken,refreshToken}
 }
 
 export const authServices = {registerPatient,loginUser,registerDoctor}
